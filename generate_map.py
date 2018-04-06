@@ -38,7 +38,7 @@ OUTPUT_FILENAME_SUPERCOMPUTERS = 'results/data_cartography_supercomputers.geojso
 OUTPUT_FILENAME_INSTRUMENTS = 'results/data_cartography_instruments.geojson'
 
 GEANT_URL = 'http://map.geant.org/maps/nodes_and_edges'
-GEANT_PATH = 'networks/nodes_and_edges'
+GEANT_PATH = 'sources/geant_nodes_and_edges.json'
 
 TOP500_URL = 'https://www.top500.org/lists/2017/11/download/TOP500_201711_all.xml'
 TOP500_PATH = 'sources/TOP500_201711_all.xml'
