@@ -13,5 +13,3 @@ The script `generate_map.py` uses the available sources to generate these 3 map 
 The output files are stored in the results directory, and are meant to be used with uMap software.
 
 The current result is visible at http://umap.openstreetmap.fr/en/map/data-cartography-2018-draft_209783.
-
-This work is carried
