@@ -8,24 +8,22 @@ Generate GEOJSON data file, based on the following sources:
 * Use UNLOCODE to map cities to geo-coordinates
 """
 
+# requires Python 3.4 or higher
+
 import sys
 from os.path import join, dirname, exists, abspath, getmtime
 import logging
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse # Python 2 compatibility
+from urllib.parse import urlparse
 from urllib.request import urlopen
 from itertools import chain
-from collections import defaultdict
-import shutil
-import datetime, time
+import time
 import re
 import math
 import csv
 import json
 import difflib
 import xml.etree.ElementTree as ET
+from typing import Iterable, List, Set, Dict
 try:
     import geojson
 except ImportError:
@@ -54,7 +52,7 @@ COUNTRIES_PATH = 'geography/countries.csv'
 LOCATIONS_PATH = 'geography/datacenter_locations.csv'
 
 
-def get_cached_url(url, cache_name=None, ttl=10):
+def get_cached_url(url: str, cache_name: str = None, ttl = 10) -> str:
     """Return a Python object from URL or cache file.
     The ttl is time-to-live of the cache file in days."""
     cache_folder = abspath(dirname(__file__))
@@ -86,7 +84,7 @@ def get_cached_url(url, cache_name=None, ttl=10):
         except Exception:
             print(url)
             raise
-        if response.getcode() != 200:
+        if response.getcode() != 200:  # type: ignore
             logging.warning("Fetching %s returns error code %s" % (url, response.getcode()))
             raise IOError("Failed to download data from %s" % url)
         encoding = 'utf-8'
@@ -128,12 +126,12 @@ def get_tsv(path, encoding='utf-8', dialect='excel-tab', header=None, filter_fun
         return list(filter(filter_func, iter(dict(zip(header, row)) for row in reader)))
 
 
-def list_to_dict(items, keyname):
+def list_to_dict(items: List[Dict], keyname: str) -> Dict[str, Dict]:
     """Turn a list of dicts into a dict of dicts, using the given keyname"""
     return dict((item[keyname], item) for item in items)
 
 
-def get_unlocodes(countries):
+def get_unlocodes(countries) -> List[Dict]:
     """Return a list of UN/LOCODE objects (list of dicts).
     Filter by country. countries is a list of 2-character country codes."""
     def get_csv(path):
