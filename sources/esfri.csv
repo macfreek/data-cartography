@@ -1,14 +1,53 @@
 # Singe-site ESFRI projects and landmarks (established projects) in the 2016 roadmap
-Type	Field	Name	Full Name	Town	Country	Lat	Long
-Project	Energy	MYRRHA	Multi-purpose hYbrid Research Reactor for High-tech Applications	Mol	Belgium	51.2174	5.0947
-Project	Physical Sciences & Engineering	EST	European Solar Telescope	Canary Islands	Spain	28.59	-17.06	
-Landmark	Energy	JHR	Jules Horowitz Reactor	St Paul lez Durance	France	43.7080	5.7753	
-Landmark	Physical Sciences & Engineering	E-ELT	European Extremely Large Telescope	Cerro Armazones	Chile	-24.5892	-70.1919
-Landmark	Physical Sciences & Engineering	ESRF	European Synchrotron Radiation Facility	Grenoble	France	45.2084	5.6900
-Landmark	Physical Sciences & Engineering	ESS	European Spallation Source ERIC	Lund	Sweden	55.7341	13.2475
-Landmark	Physical Sciences & Engineering	European XFEL	European X-Ray Free-Electron Laser Facility	Hamburg	Germany	53.5886	9.8296
-Landmark	Physical Sciences & Engineering	FAIR	Facility for Antiproton and Ion Research	Darmstadt	Germany	49.9308	8.6798
-Landmark	Physical Sciences & Engineering	HL-LHC	High-Luminosity Large Hadron Collider	Geneva	Switzerland	46.2333	6.0479
-Landmark	Physical Sciences & Engineering	ILL	Institut Max von Laue-Paul Langevin	Grenoble	France	45.2062	5.6930
-Landmark	Physical Sciences & Engineering	SPIRAL2	Système de Production d’Ions Radioactifs en Ligne de 2e génération	Caen	France	49.2131	-0.3604	
-
+Type	Field	Name	Full Name	Roadmap Entry (Year)	Operation	Legal Status	Construction Costs	Operational Annual Budget	Town	Country	Lat	Long
+Project	Energy	ECCSEL	European Carbon Dioxide Capture and Storage Laboratory Infrastructure	2008	2016	ERIC under preparation	80–120	1				
+Project	Energy	EU-SOLARISE	uropean SOLAR Research Infrastructure for Concentrated Solar Power	2010	2020	ERIC under preparation	120	3–4				
+Project	Energy	MYRRHA	Multi-purpose hYbrid Reactor for High-tech Applications	2010	2024	NA	100		Mol	Belgium	51.2174	5.0947
+Project	Energy	WindScanner	European WindScanner Facility	2010	2018		45–60	8				
+Project	Environment	ACTRIS	Aerosols, Clouds and Trace gases Research Infrastructure	2016	2025		190	50				
+Project	Environment	DANUBIUS-RI	International Centre for Advanced Studies on River-Sea Systems	2016	2022		222	28				
+Project	Environment	EISCAT_3D	Next generation European incoherent scatter radar system	2008	2021		74	6				
+Project	Environment	EPOS	European Plate Observing System	2008	2020	ERIC under preparation	53	15				
+Project	Environment	SIOS	Svalbard Integrated Arctic Earth Observing System	2008	2020		80	2–3				
+Project	Health & Food	AnaEE	Infrastructure for Analysis and Experimentation on Ecosystems	2010	2018		200	2–3				
+Project	Health & Food	EMBRC	European Marine Biological Resource Centre	2008	2016	ERIC under preparation	4.5	6				
+Project	Health & Food	EMPHASIS	European Infrastructure for multi-scale Plant Phenomics and Simulation for food security in a changing climate	2016	2020		73	3.6				
+Project	Health & Food	ERINHA	European research infrastructure on highly pathogenic agents	2008	2018	NA	NA					
+Project	Health & Food	EU-OPENSCREEN	European Infrastructure of Open Screening Platforms for Chemical Biology	2008	2018	ERIC under preparation	7	1.2				
+Project	Health & Food	Euro-BioImaging	European Research Infrastructure for Imaging Technologies in Biological and Biomedical Sciences	2008	2017	ERIC under preparation	NA	1.55				
+Project	Health & Food	ISBE	Infrastructure for Systems Biology Europe	2010	2018		30	7.2				
+Project	Health & Food	MIRRI	Microbial Resource Research Infrastructure	2010	2019		6.2	1				
+Project	Physical Sciences & Engineering	CTA	Cherenkov Telescope Array	2008	2023		297	20				
+Project	Physical Sciences & Engineering	EST	European Solar Telescope	2016	2026		200	9	Canary Islands	Spain	28.59	-17.06
+Project	Physical Sciences & Engineering	KM3NeT 2.00	KM3 Neutrino Telescope 2.0: Astroparticle & Oscillations Research with Cosmics in the Abyss	2016	2020		92	3				
+Project	Social & Cultural Innovation	E-RIHS	European Research Infrastructure for Heritage Science	2016	2022		4	5				
+Landmark	Energy	JHR	Jules Horowitz Reactor	2006	2020		1	NA	St Paul lez Durance	France	43.708	5.7753
+Landmark	Environment	EMSO	European Multidisciplinary Seafloor and water-column Observatory	2006	2016	ERIC under preparation	108	36				
+Landmark	Environment	EURO-ARGO ERIC	European contribution to the international Argo Programme	2006	2014	ERIC, 2014	10	8				
+Landmark	Environment	IAGOS	In-service Aircraft for a Global Observing System	2006	2014	AISBL, 2014	25	6				
+Landmark	Environment	ICOS ERIC	Integrated Carbon Observation System	2006	2016	ERIC, 2015	48	24–35				
+Landmark	Environment	LifeWatch	e-infrastructure for Biodiversity and Ecosystem Research	2006	2016	ERIC under preparation	66	10				
+Landmark	Health & Food	BBMRI ERIC	Biobanking and BioMolecular resources Research Infrastructure	2006	2014	ERIC, 2013	170–220	3.5				
+Landmark	Health & Food	EATRIS ERIC	European Advanced Translational Research Infrastructure in Medicine	2006	2013	ERIC, 2013	500	2.5				
+Landmark	Health & Food	ECRIN ERIC	European Clinical Research Infrastructure Network	2006	2014	ERIC, 2013	1.5	2				
+Landmark	Health & Food	ELIXIR	A distributed infrastructure for life-science information	2006	2014	ELIXIR Consortium Agreement, 2013	125	95				
+Landmark	Health & Food	INFRAFRONTIER	European Research Infrastructure for the generation, phenotyping, archiving and distribution of mouse ERIC under preparation disease models	2006	2013	GmbH, 2013	180	80				
+Landmark	Health & Food	INSTRUCT	Integrated Structural Biology Infrastructure	2006	2012	International Consortium Agreement, 2012. ERIC under preparation	285	25				
+Landmark	Physical Sciences & Engineering	E-ELT	European Extremely Large Telescope	2006	2024	Programme of ESO	1	40	Cerro Armazones	Chile	-24.5892	-70.1919
+Landmark	Physical Sciences & Engineering	ELI	Extreme Light Infrastructure	2006	2018	AISBL, 2013. ERIC under preparation	850	90				
+Landmark	Physical Sciences & Engineering	EMFL	European Magnetic Field Laboratory	2008	2014	AISBL, 2015	170	20				
+Landmark	Physical Sciences & Engineering	ESRF UPGRADES	Phase I	2006	2015	Programme of ESRF	180	82	Grenoble	France	45.2084	5.69
+Landmark	Physical Sciences & Engineering	ESRF UPGRADES	Phase II: Extremely Brilliant Source	2016	2022		150					
+Landmark	Physical Sciences & Engineering	European Spallation Source ERIC	European Spallation Source	2006	2025	ERIC, 2015	1.84	140	Lund	Sweden	55.7341	13.2475
+Landmark	Physical Sciences & Engineering	European XFEL	European X-Ray Free-Electron Laser Facility	2006	2017	GmbH, 2009	1.49	115	Hamburg	Germany	53.5886	9.8296
+Landmark	Physical Sciences & Engineering	FAIR	Facility for Antiproton and Ion Research	2006	2022	GmbH, 2010	1.26	234	Darmstadt	Germany	49.9308	8.6798
+Landmark	Physical Sciences & Engineering	HL-LHC	High-Luminosity Large Hadron Collider	2016	2026	Programme of CERN	1.37	100	Geneva	Switzerland	46.2333	6.0479
+Landmark	Physical Sciences & Engineering	ILL 20/20	Institut Max von Laue-Paul Langevin	2006	2020	Programme of ILL	171	92	Grenoble	France	45.2062	5.693
+Landmark	Physical Sciences & Engineering	SKA	Square Kilometre Array	2006	2020	SKAO, 2011	650	75				
+Landmark	Physical Sciences & Engineering	SPIRAL2	Système de Production d’Ions Radioactifs en Ligne de 2e génération	2006	2016	Programme of GANIL	110	5–6	Caen	France	49.2131	-0.3604
+Landmark	Social & Cultural Innovation	CESSDA	Consortium of European Social Science Data Archives	2006	2013	Norwegian limited company, 2013. ERIC under preparation	NA	1.9				
+Landmark	Social & Cultural Innovation	CLARIN ERIC	Common Language Resources and Technology Infrastructure	2006	2012	ERIC, 2012	NA	12				
+Landmark	Social & Cultural Innovation	DARIAH ERIC	Digital Research Infrastructure for the Arts and Humanities	2006	2019	ERIC, 2014	4.3	0.6				
+Landmark	Social & Cultural Innovation	ESS ERIC	European Social Survey	2006	2013	ERIC, 2013	NA	6				
+Landmark	Social & Cultural Innovation	SHARE ERIC	Survey of Health, Ageing and Retirement in Europe	2006	2011	ERIC, 2011	110	12				
+Landmark	e-RI	PRACE	Partnership for Advanced Computing in Europe	2006	2010	AISBL, 2010	500	120				
