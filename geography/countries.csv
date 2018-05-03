@@ -1,10 +1,5 @@
 # Countries in the EU
 ISO-2	ISO-3	Country	Aliases	Geographic	EU member status	Population
-AZ	AZE	Azerbaijan		Western Asia	Council of Europe	9898085
-RU	RUS	Russia		Partly European	Council of Europe	146877088
-AD	AND	Andorra		European microstate	EU customs member	78264
-MC	MCO	Monaco		European microstate	EU customs member	37550
-SM	SMR	San Marino		European microstate	EU customs member	33196
 AT	AUT	Austria		Europe	EU member	8823054
 BE	BEL	Belgium		Europe	EU member	11403187
 BG	BGR	Bulgaria		Europe	EU member	7101859
@@ -33,7 +28,6 @@ SI	SVN	Slovenia		Europe	EU member	2065895
 ES	ESP	Spain		Europe	EU member	46549045
 SE	SWE	Sweden		Europe	EU member	10128320
 GB	GBR	United Kingdom	Great Britain	Europe	EU member	65648100
-LI	LIE	Liechtenstein		European microstate	EU trade ass. Member	38111
 AL	ALB	Albania		Europe	H2020 Associated Country	2876591
 AM	ARM	Armenia		Western Asia	H2020 Associated Country	2979600
 BA	BIH	Bosnia and Herzegovina		Europe	H2020 Associated Country	3511372
@@ -50,6 +44,12 @@ CH	CHE	Switzerland		Europe	H2020 Associated Country	8465234
 TN	TUN	Tunisia		Africa	H2020 Associated Country	11304482
 TR	TUR	Turkey		Partly European	H2020 Associated Country	80810525
 UA	UKR	Ukraine		Europe	H2020 Associated Country	42386403
+LI	LIE	Liechtenstein		European microstate	EU trade ass. Member	38111
+AD	AND	Andorra		European microstate	EU customs member	78264
+MC	MCO	Monaco		European microstate	EU customs member	37550
+SM	SMR	San Marino		European microstate	EU customs member	33196
+AZ	AZE	Azerbaijan		Western Asia	Council of Europe	9898085
+RU	RUS	Russia		Partly European	Council of Europe	146877088
 BY	BLR	Belarus		Europe	No	9491900
 KZ	KAZ	Kazakhstan		Western Asia	No	18177700
 XK	1A0	Kosovo		Europe - Limited recognition	No	1783531
