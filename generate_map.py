@@ -50,7 +50,7 @@ UNLOCODE_PART2_PATH = 'geography/2017-2 UNLOCODE CodeListPart2.csv'
 UNLOCODE_PART3_PATH = 'geography/2017-2 UNLOCODE CodeListPart3.csv'
 
 COUNTRIES_PATH = 'geography/countries.csv'
-LOCATIONS_PATH = 'geography/datacenter_locations.csv'
+LOCATIONS_PATH = 'geography/known_locations.csv'
 
 def get_uncached_url(url: str) -> str:
     """Return a Python object from URL."""
@@ -412,8 +412,10 @@ class Locator(object):
         self.places = get_tsv(self.location_path)
         self.place_by_id = {}
         for place in self.places:
-            place['id'] = [int(id) for id in place['id'].split(';') if id]
-            for id in place['id']:
+            place['top500_id'] = [int(id) for id in place['top500_id'].split(';') if id]
+            for id in place['top500_id']:
+                if id in self.place_by_id:
+                    logging.error("Duplicate Top 500 ID %d" % (id))
                 self.place_by_id[int(id)] = place
             try:
                 place['long'] = float(place['long'])
