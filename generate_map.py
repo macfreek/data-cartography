@@ -54,7 +54,9 @@ LOCATIONS_PATH = 'geography/datacenter_locations.csv'
 
 def get_cached_url(url: str, cache_name: str = None, ttl = 10) -> str:
     """Return a Python object from URL or cache file.
-    The ttl is time-to-live of the cache file in days."""
+    The ttl is time-to-live of the cache file in days.
+    A ttl of 0 mean: always fetch online.
+    A ttl of None mean: always use local file."""
     cache_folder = abspath(dirname(__file__))
     pu = urlparse(url)
     if not cache_name:
@@ -72,11 +74,15 @@ def get_cached_url(url: str, cache_name: str = None, ttl = 10) -> str:
             except (ValueError, IndexError):
                 pass # ignore any errors
     file_path = join(cache_folder, cache_name)
-    if exists(file_path) and time.time() - getmtime(file_path) < ttl*86400:
+    if exists(file_path) and (ttl is None or time.time() - getmtime(file_path) < ttl*86400):
         # file exists and is recent (<10 days)
         logging.info("Fetching %s" % (cache_name))
         with open(file_path, 'r', encoding='utf-8') as f:
             data = f.read()
+    elif ttl is None:
+        # no file, but can't fetch online. Usually because you need to log in.
+        logging.error("Please manually download %s and store as %s" % (url, cache_name))
+        raise IOError("Failed to download data from %s" % url)
     else:
         logging.info("Fetching %s" % (url))
         try:
@@ -152,7 +158,7 @@ def get_geant_nodes():
 
 
 def get_top500_nodes():
-    return ET.XML(get_cached_url(TOP500_URL, TOP500_PATH))
+    return ET.XML(get_cached_url(TOP500_URL, TOP500_PATH, ttl=None))
 
 
 def get_esfri_nodes():
@@ -383,10 +389,14 @@ def parse_and_filter_sc(sc_data, countries):
     return sites
 
 
-def parse_and_filter_instruments(esfri_data, countries):
-    for city in esfri_data:
-        city['long'] = float(city['long'])
-        city['lat'] = float(city['lat'])
+def parse_and_filter_instruments(esfri_nodes, countries):
+    esfri_data = []
+    for city in esfri_nodes:
+        if city['long'] and city['lat']:
+            city['long'] = float(city['long'])
+            city['lat'] = float(city['lat'])
+            esfri_data.append(city)
+    return esfri_data
 
 
 class Locator(object):
@@ -582,8 +592,8 @@ if __name__ == '__main__':
     geolayer = umap_sc_layer(sc_nodes.values())
     export_geojson(OUTPUT_FILENAME_SUPERCOMPUTERS, geolayer)
 
-    esfri_data = get_esfri_nodes()
-    parse_and_filter_instruments(esfri_data, countries)
+    esfri_nodes = get_esfri_nodes()
+    esfri_data = parse_and_filter_instruments(esfri_nodes, countries)
     geolayer = umap_instruments_layer(esfri_data)
     export_geojson(OUTPUT_FILENAME_INSTRUMENTS, geolayer)
 
