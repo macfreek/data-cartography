@@ -13,7 +13,7 @@ Generate GEOJSON data file, based on the following sources:
 import sys
 from os.path import join, dirname, exists, abspath, getmtime
 import logging
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 from urllib.request import urlopen
 from itertools import chain
 import time
@@ -24,6 +24,7 @@ import json
 import difflib
 import xml.etree.ElementTree as ET
 from typing import Iterable, List, Set, Dict
+from configparser import ConfigParser
 try:
     import geojson
 except ImportError:
@@ -51,17 +52,33 @@ UNLOCODE_PART3_PATH = 'geography/2017-2 UNLOCODE CodeListPart3.csv'
 COUNTRIES_PATH = 'geography/countries.csv'
 LOCATIONS_PATH = 'geography/datacenter_locations.csv'
 
+def get_uncached_url(url: str) -> str:
+    """Return a Python object from URL."""
+    logging.info("Fetching %s" % (url))
+    try:
+        response =  urlopen(url)
+    except Exception:
+        logging.warning("Can't downaload %s" % (url))
+        raise
+    if response.getcode() != 200:  # type: ignore
+        logging.warning("Fetching %s returns error code %s" % (url, response.getcode()))
+        raise IOError("Failed to download data from %s" % url)
+    encoding = 'utf-8'
+    # for whatever reason \b is not supported by my implementation of re.
+    m = re.search('[\s;]charset=([\w\-]+)', response.getheader('Content-Type'))
+    if m:
+        encoding = m.group(1)
+    data = response.read().decode(encoding)
 
 def get_cached_url(url: str, cache_name: str = None, ttl = 10) -> str:
     """Return a Python object from URL or cache file.
     The ttl is time-to-live of the cache file in days.
     A ttl of 0 mean: always fetch online.
     A ttl of None mean: always use local file."""
-    cache_folder = abspath(dirname(__file__))
-    pu = urlparse(url)
     if not cache_name:
         # get filename from path and query parameters name *id or *ids.
         # does not include the hostname
+        pu = urlparse(url)
         cache_name = pu.path.strip('/')
         cache_name = re.sub(r'[^A-Za-z0-9\._\-]+','_', cache_name)
         for query in pu.query.split('&'):
@@ -73,6 +90,7 @@ def get_cached_url(url: str, cache_name: str = None, ttl = 10) -> str:
                     cache_name += '_' + k + '_' + v
             except (ValueError, IndexError):
                 pass # ignore any errors
+    cache_folder = abspath(dirname(__file__))
     file_path = join(cache_folder, cache_name)
     if exists(file_path) and (ttl is None or time.time() - getmtime(file_path) < ttl*86400):
         # file exists and is recent (<10 days)
@@ -84,21 +102,7 @@ def get_cached_url(url: str, cache_name: str = None, ttl = 10) -> str:
         logging.error("Please manually download %s and store as %s" % (url, cache_name))
         raise IOError("Failed to download data from %s" % url)
     else:
-        logging.info("Fetching %s" % (url))
-        try:
-            response =  urlopen(url)
-        except Exception:
-            print(url)
-            raise
-        if response.getcode() != 200:  # type: ignore
-            logging.warning("Fetching %s returns error code %s" % (url, response.getcode()))
-            raise IOError("Failed to download data from %s" % url)
-        encoding = 'utf-8'
-        # for whatever reason \b is not supported by my implementation of re.
-        m = re.search('[\s;]charset=([\w\-]+)', response.getheader('Content-Type'))
-        if m:
-            encoding = m.group(1)
-        data = response.read().decode(encoding)
+        data = get_uncached_url(url)
         try:
             logging.info("Write to %s" % (file_path))
             with open(file_path, 'w', encoding='utf-8') as f:
@@ -416,6 +420,13 @@ class Locator(object):
                 place['lat'] = float(place['lat'])
             except ValueError:
                 pass
+        try:
+            config = ConfigParser()
+            config.read('config.ini')
+            self.googlemap_apikey = config['Google']['api_key']
+        except Exception as exc:
+            logging.error("Can't read Google map api key from config.ini: %s" % (exc))
+            self.googlemap_apikey = None
     def _get_known_place(self, countrycode, town):
         """Search the local CSV file for the given town.
         Return a dict with attributes: unlocode, countrycode, town, long, lat.
@@ -442,6 +453,7 @@ class Locator(object):
         Return None if the town is not found."""
         if not self.locodes:
             self.locodes = get_unlocodes(self.eu_countries)
+        # TODO: use NFKC normalization to make matching even better.
         fuzzymatcher = difflib.SequenceMatcher(False, town.lower(), '')
         for locode in self.locodes:
             if locode['country'] == countrycode:
@@ -465,6 +477,44 @@ class Locator(object):
                     logging.info("Possible location match: %s %s (%s) for %s in %s" % \
                             (locode['country'], locode['ascii'],  locode['place'], town, countrycode))
         return None
+    def _get_location_from_osm(self, countrycode, town):
+        params = {
+            'format': 'jsonv2',
+            'email': 'freek.dijkstra@surfsara.nl',
+            'countycodes': countrycode,
+            'city': town,
+        }
+        url = 'https://nominatim.openstreetmap.org/search?' + urlencode(params)
+        data = get_uncached_url(url)
+        result = json.loads(data)
+        result = result["results"][0]
+        # TODO: don't cache, but instead add to self.places and write self.places back to file
+        print(result)
+        result = result[0]
+        place = {
+                'long': float(result["lon"]),
+                'lat': float(result["lat"]),
+            }
+        return place
+    def _get_location_from_googlemaps(self, address):
+        if not self.googlemap_apikey:
+            logging.error("No Google Maps API key available")
+            return None
+        params = {
+            'key': self.googlemap_apikey,
+            'query': address,
+        }
+        url = 'https://maps.googleapis.com/maps/api/place/textsearch/json?' + urlencode(params)
+        data = get_uncached_url(url)
+        result = json.loads(data)
+        # TODO: don't cache, but instead add to self.places and write self.places back to file
+        print(result)
+        result = result["geometry"]["location"]["lat"]
+        place = {
+                'long': float(result["geometry"]["location"]["long"]),
+                'lat': float(result["geometry"]["location"]["lat"]),
+            }
+        return place
     def _get_place(self, location):
         """Given a dict with 'country' and 'town' attribute, 
         find an associated place dict"""
@@ -485,24 +535,44 @@ class Locator(object):
         place = self._search_locode(location['countrycode'], town)
         if place:
             place['source'] = 'unlocode'
+            return place
+        # Try to find by address in Open Street Maps
+        place = self._get_location_from_osm(location['countrycode'], town)
+        if place:
+            place['source'] = 'osm'
+            return place
+        # Try to find by address in Google Maps
+        place = self._get_location_from_googlemaps(location['countrycode'], town)
+        if place:
+            place['source'] = 'googlemaps'
         return place
     def _augment(self, location, place):
         for name in ('unlocode', 'country', 'countrycode', 'town', 'long', 'lat'):
             if place.get(name) and not location.get(name):
                 location[name] = place[name]
     def locate(self, location):
-        """Given a dict with 'country' and 'town' attribute, 
-        try to augment it with a UN/LOCODE (unlocode), countrycode,
-        and associated longitude (long) and latitude (lat) attributes."""
+        """Given a dict with 'country' (required) and 'town' and/or 'address' attribute.
+        try to augment it countrycode, longitude (long) and latitude (lat) attributes.
+        First try UN/LOCODE databae (and set unlocode attribute), 
+        otherwise use the Google Maps API."""
         # Set country and countrycode
-        if 'country' not in location:
-            location['country'] = self.countries[location['countrycode']]['country']
-        if 'countrycode' not in location:
-            location['countrycode'] = self.countries[location['country']]['iso-2']
+        try:
+            if 'country' not in location:
+                assert 'countrycode' in location
+                location['country'] = self.countries[location['countrycode']]['country']
+        except AssertionError:
+            logging.error("Location without country nor countrycode: %s" % (location))
+        except IndexError:
+            logging.error("Unknown country %s in location %s" % (location['countrycode'], location))
+        try:
+            if 'countrycode' not in location:
+                location['countrycode'] = self.countries[location['country']]['iso-2']
+        except IndexError:
+            logging.error("Unknown country %s in location %s" % (location['country'], location))
         # Find geo location
         place = self._get_place(location)
         if not place:
-            logging.error("Can't find UN/LOCODE for %s in %s (id %s)" % \
+            logging.error("Can't find location for %s in %s (id %s)" % \
                     (location.get('town'), location['country'], location['id'] if 'id' in location else ''))
             return
         self._augment(location, place)
