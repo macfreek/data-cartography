@@ -307,51 +307,6 @@ if __name__ == '__main__':
         sys.exit(1)
     downloader = CachedDownloader(meril_folder)
     
-    # Download infrastructures
-    parser = SearchResultParser(BASE_MERIL_URL, INFRASTRUCTURE_RE_PATH)
-    result_links = downloader.get_cached_url(
-                ALL_INFRASTRUCTURES_URL, ALL_INFRASTRUCTURES_PATH, 
-                verify_ssl=verify_ssl, ttl=3, decode_name='search results',
-                decode_func=parser_decorder_factory(parser),
-                )
-    logging.info("Found %d infrastructure links" % (len(result_links)))
-    del parser
-
-    # Download individual infrastructures
-    infrastructures = {}
-    json_cachefile = downloader.cachefolder / 'infrastructures.json'
-    try:
-        # Check if we already parsed them before.
-        with open(json_cachefile, 'r', encoding='utf-8') as f:
-            infrastructures_as_str = json.load(f)
-            # Convert keys from string to integer
-            for identifier, infrastructure in infrastructures_as_str.items():
-                infrastructures[int(identifier)] = infrastructure
-            del infrastructures_as_str
-    except Exception as exc:
-        logging.warning(str(exc))
-        infrastructures = {}
-    if set(infrastructures.keys()) != set(result_links.keys()):
-        # There are new infrastructures. Parse them all.
-        for identifier, url in result_links.items():
-            html_cachefile = 'infrastructures_html/%d.html' % (identifier)
-            parser = InfrastructureParser(identifier)
-            infrastructure = downloader.get_cached_url(
-                        url, html_cachefile, 
-                        verify_ssl=verify_ssl, ttl=3, decode_name='infrastructure HTML',
-                        decode_func=parser_decorder_factory(parser),
-                        )
-            assert isinstance(infrastructure, dict)
-            try:
-                verify_infrastructure(identifier, infrastructure, downloader=downloader)
-                infrastructures[identifier] = infrastructure
-            except ValueError as exc:
-                logging.error("Skip infrastructure %d" % (identifier))
-        # Write results to file
-        with open(json_cachefile, 'w', encoding='utf-8') as f:
-            logging.debug("Write to %s" % (json_cachefile))
-            json.dump(infrastructures, f, indent=1)
-
     # Download organisations
     parser = SearchResultParser(BASE_MERIL_URL, ORGANISATION_RE_PATH)
     result_links = downloader.get_cached_url(
@@ -395,4 +350,68 @@ if __name__ == '__main__':
         with open(json_cachefile, 'w', encoding='utf-8') as f:
             logging.debug("Write to %s" % (json_cachefile))
             json.dump(organisations, f, indent=1)
+
+    # mapping from infrastructure to organisation (which we use later)
+    infrastructure_organisations = {}
+    for identifier,organisation in organisations.items():
+        for infrastructure in organisation["facilitys"]["entities"]:
+            infrastructure_id = int(infrastructure["id"])
+            if infrastructure_id in infrastructure_organisations:
+                infrastructure_organisations[infrastructure_id].append(identifier)
+            else:
+                infrastructure_organisations[infrastructure_id] = [identifier]
+    
+    # Download infrastructures
+    parser = SearchResultParser(BASE_MERIL_URL, INFRASTRUCTURE_RE_PATH)
+    result_links = downloader.get_cached_url(
+                ALL_INFRASTRUCTURES_URL, ALL_INFRASTRUCTURES_PATH, 
+                verify_ssl=verify_ssl, ttl=3, decode_name='search results',
+                decode_func=parser_decorder_factory(parser),
+                )
+    logging.info("Found %d infrastructure links" % (len(result_links)))
+    del parser
+
+    # Download individual infrastructures
+    infrastructures = {}
+    json_cachefile = downloader.cachefolder / 'infrastructures.json'
+    try:
+        # Check if we already parsed them before.
+        with open(json_cachefile, 'r', encoding='utf-8') as f:
+            infrastructures_as_str = json.load(f)
+            # Convert keys from string to integer
+            for identifier, infrastructure in infrastructures_as_str.items():
+                infrastructures[int(identifier)] = infrastructure
+            del infrastructures_as_str
+    except Exception as exc:
+        logging.warning(str(exc))
+        infrastructures = {}
+    if set(infrastructures.keys()) != set(result_links.keys()):
+        # There are new infrastructures. Parse them all.
+        for identifier, url in result_links.items():
+            html_cachefile = 'infrastructures_html/%d.html' % (identifier)
+            parser = InfrastructureParser(identifier)
+            infrastructure = downloader.get_cached_url(
+                        url, html_cachefile, 
+                        verify_ssl=verify_ssl, ttl=3, decode_name='infrastructure HTML',
+                        decode_func=parser_decorder_factory(parser),
+                        )
+            assert isinstance(infrastructure, dict)
+            try:
+                verify_infrastructure(identifier, infrastructure, downloader=downloader)
+                if identifier in infrastructure_organisations:
+                    infrastructure['organisations'] = infrastructure_organisations[identifier]
+                else:
+                    infrastructure['organisations'] = []
+                infrastructures[identifier] = infrastructure
+            except ValueError as exc:
+                logging.error("Skip infrastructure %d" % (identifier))
+        # Write results to file
+        with open(json_cachefile, 'w', encoding='utf-8') as f:
+            logging.debug("Write to %s" % (json_cachefile))
+            json.dump(infrastructures, f, indent=1)
+    
+    unlisted_infrastructures = set(infrastructure_organisations.keys()) - set(infrastructures.keys())
+    if unlisted_infrastructures:
+        logging.warning("Infrastructures of organisations, not listed as research infrastructure: %s" \
+                         % (', '.join([str(identifier) for identifier in unlisted_infrastructures])))
 
