@@ -66,17 +66,23 @@ def get_esfri_nodes():
 
 def get_meril_nodes():
     cache_folder = abspath(dirname(__file__))
-    file_path = join(cache_folder, MERIL_ORGANISATIONS)
-    with open(file_path, 'r', encoding='utf-8') as f:
-        json_with_str_keys = json.load(f)
-        organisations = {int(identifier): org for identifier, org in json_with_str_keys.items()}
-    file_path = join(cache_folder, MERIL_INFRASTRUCTURES)
-    with open(file_path, 'r', encoding='utf-8') as f:
-        json_with_str_keys = json.load(f)
-        infrastructures = {
-                int(identifier): infra 
-                for identifier, infra in json_with_str_keys.items()
-            }
+    try:
+        file_path = join(cache_folder, MERIL_ORGANISATIONS)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            json_with_str_keys = json.load(f)
+            organisations = {int(identifier): org for identifier, org in json_with_str_keys.items()}
+        file_path = join(cache_folder, MERIL_INFRASTRUCTURES)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            json_with_str_keys = json.load(f)
+            infrastructures = {
+                    int(identifier): infra 
+                    for identifier, infra in json_with_str_keys.items()
+                }
+    except FileNotFoundError as exc:
+        logging.error("MERIL files ({} and {}) are not found. Please run `download_meril.py`" \
+                    .format(MERIL_ORGANISATIONS, MERIL_INFRASTRUCTURES))
+        infrastructures = {}
+        organisations = {}
     
     places = {}
     for identifier, infrastructure in infrastructures.items():
@@ -119,7 +125,7 @@ def get_meril_nodes():
             except KeyError:
                 pass
         # TODO: do something useful here
-        print(identifier, locationtypes, locationarray, organsationAddresses)
+        # print(identifier, locationtypes, locationarray, organsationAddresses)
         # places[...] = ...
     return places
 
@@ -136,7 +142,6 @@ def export_geojson(path, geoinfo):
 
 def umap_network_layer(geant_nodes, geant_links):
     """Return a geojson.FeatureCollection"""
-    # TODO: collapse overlapping line between two same endpoints
     geolayer = geojson.FeatureCollection([])
     for city in geant_nodes:
         geom = geojson.Point((city['long'], city['lat']))
@@ -312,6 +317,7 @@ def parse_and_filter_network(geant_data, country_filter):
         city1['links'].append(link)
         city2['links'].append(link)
         geant_links[int(link['id'])] = link
+    # TODO: collapse overlapping line between two same endpoints
     geant_nodes = []
     for city in all_geant_nodes.values():
         if not country_filter(city):

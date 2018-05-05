@@ -52,6 +52,8 @@ class countrylist(dict):
         logging.warning("Unkown country %s" % (key))
         return {'name': key, 'in_eu': False}
     
+    # TODO (low priority): read from original sources: iso3166, UNSD, etc.
+    
     @staticmethod
     def from_file(filename=COUNTRIES_PATH):
         """Given a list of countries as a dict,
@@ -81,9 +83,6 @@ class countrylist(dict):
             for alias in country['aliases']:
                 country_dict[alias] = country
         return country_dict
-    
-    def to_file(filename):
-        pass
 
 
 class Place:
@@ -130,11 +129,21 @@ class Locator(object):
             self.googlemap_apikey = None
     
     def read_known_countries(self):
+        """Populate self.countries with known places"""
+        # TODO: to be written
+    
+    def read_known_places(self):
         """Populate self.places with known places"""
+        self._modified_places = False
         # TODO: to be written
-    def store_known_countries(self):
+    
+    def store_known_places(self):
         """If self.places was modified, write the modifications to file"""
+        if not self._modified_places:
+            logging.debug("Places not modified.")
+            return
         # TODO: to be written
+        self._modified_places = False
     
     def filter_factory(self, countries):
         """Return a filter function `country_filter(place)` that checks 
@@ -277,6 +286,7 @@ class Locator(object):
         return place
         
         # TODO: the following is yet disabled.
+        # TODO: stop here if town is empty.
         
         # Try to find by address in Open Street Maps
         place = self._get_location_from_osm(location['countrycode'], town)
@@ -290,6 +300,7 @@ class Locator(object):
         return place
     
     def _augment(self, location, place):
+        """Augment location with place attributes"""
         for name in ('unlocode', 'country', 'countrycode', 'town', 'long', 'lat'):
             if place.get(name) and not location.get(name):
                 location[name] = place[name]
@@ -357,10 +368,10 @@ class Locator(object):
         """Return a list of UN/LOCODE objects (list of dicts).
         Filter by country. countries is a list of 2-character country codes."""
         def get_csv(path) -> List[Dict[str, Any]]:
-            return get_tsv(path, encoding='latin-1', 
-                    dialect='excel', header=['change', 'country', 'place', 'name', 'ascii', 
-                    'province', 'function', 'status', 'date', 'iata', 'geo84', 'note'],
-                    filter_func=countryfilter)
+            header = ['change', 'country', 'place', 'name', 'ascii', 
+                    'province', 'function', 'status', 'date', 'iata', 'geo84', 'note']
+            return get_tsv(path, encoding='latin-1', dialect='excel', header=header,
+                           filter_func=countryfilter)
         locodes = []  # type: List[Dict[str, Any]]
         locodes = list(chain(
                     get_csv(UNLOCODE_PART1_PATH),
