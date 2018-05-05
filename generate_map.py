@@ -381,7 +381,7 @@ def parse_and_filter_sc(sc_data, country_filter):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stderr, 
+    logging.basicConfig(level=logging.INFO, stream=sys.stderr, 
                         format='%(levelname)-8s %(message)s')
     config = ConfigParser()
     config.read('config.ini')
@@ -392,21 +392,25 @@ if __name__ == '__main__':
 
     geant_data = get_geant_nodes(downloader)
     geant_nodes, geant_links = parse_and_filter_network(geant_data, country_filter)
+    logging.info("%d node and %d links in GEANT network" % (len(geant_nodes), len(geant_links)))
     geolayer = umap_network_layer(geant_nodes, geant_links)
     export_geojson(OUTPUT_FILENAME_NETWORK, geolayer)
-    
+
     sc_data = get_top500_nodes(downloader)
     sc_nodes = parse_and_filter_sc(sc_data, country_filter)
     locator.locate_and_filter_places(sc_nodes)
+    logging.info("%d supercomputer centers" % (len(sc_nodes)))
     geolayer = umap_sc_layer(sc_nodes.values())
     export_geojson(OUTPUT_FILENAME_SUPERCOMPUTERS, geolayer)
 
     esfri_nodes = get_esfri_nodes()
     locator.locate_and_filter_places(esfri_nodes)  # no filtering
+    logging.info("%d ESFRI-listed single-site instruments" % (len(esfri_nodes)))
     geolayer = umap_instruments_layer(esfri_nodes)
     export_geojson(OUTPUT_FILENAME_INSTRUMENTS, geolayer)
 
     meril_nodes = get_meril_nodes()
     locator.locate_and_filter_places(meril_nodes)  # no filtering
+    logging.info("%d MERIL-listed instruments" % (len(meril_nodes)))
     geolayer = umap_meril_layer(meril_nodes)
     export_geojson(OUTPUT_FILENAME_MERIL, geolayer)
