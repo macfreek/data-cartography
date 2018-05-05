@@ -22,6 +22,7 @@ import re
 import time
 import csv
 from typing import List, Dict, Any
+from collections import defaultdict
 # external library
 try:
     import requests
@@ -38,6 +39,7 @@ def get_tsv(path: str,
             encoding='utf-8', 
             dialect='excel-tab', 
             header=None, 
+            header_types = {'lat': float, 'long': float, 'id': int},
             filter_func=lambda row: True
         ) -> List[Dict[str, Any]]:
     """Return a Python object from tab delimited file.
@@ -48,6 +50,7 @@ def get_tsv(path: str,
     base_folder = abspath(dirname(__file__))
     path = join(base_folder, path)
     # newline='' allows for multiline fields within quotes
+    header_types = defaultdict(lambda: str, header_types)
     with open(path, 'r', encoding=encoding, newline='') as csvfile:
         # ignore lines starting with a hash (#) or empty lines
         # Since Python 3.6, filter returns an iterator, so doesn't keep 
@@ -59,7 +62,29 @@ def get_tsv(path: str,
             header = reader.__next__()
         # remove non-printable characters from headers and turn into lowercase
         header = [re.sub(r'[^A-Za-z0-9\-_]+','_', head.lower()) for head in header]
-        return list(filter(filter_func, iter(dict(zip(header, row)) for row in reader)))
+        # Faster method, that does not cast types
+        # return list(filter(filter_func, iter(dict(zip(header, row)) for row in reader)))
+        entries = []
+        for row in reader:
+            if len(row) < len(header):
+                logging.warning("Not enough fields in record in %s: %s" % (path, row))
+                row += [''] * (len(header) - len(row))
+            elif len(row) < len(header):
+                logging.warning("Too many fields in record in %s: %s" % (path, row))
+            if filter_func and not filter_func(row):
+                continue
+            
+            # turn list of items into a dict, and convert values if header_types is set.
+            dict_row = {}
+            for k,v in zip(header, row):
+                try:
+                    dict_row[k] = header_types[k](v)
+                except ValueError:
+                    if v != '':
+                        raise 
+                    dict_row[k] = None
+            entries.append(dict_row)
+        return entries
 
 
 def ensure_directory(path: Path, name="directory"):

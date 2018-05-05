@@ -60,7 +60,12 @@ class countrylist(dict):
         return a dict with any key, pointing to the augmented dict.
         """
         country_dict = countrylist()
-        country_list = get_tsv(filename)
+        header_types = {'population': int, 
+                        'aliases': lambda ls: ls.split(';'), 
+                        'lat': float, 
+                        'long': float,
+                       }
+        country_list = get_tsv(filename, header_types=header_types)
         for country in country_list:
             if country['eu_member_status'] in ('EU member', 'H2020 Associated Country',):
                 country['in_eu'] = True
@@ -73,12 +78,8 @@ class countrylist(dict):
             country_dict[country['iso-2']] = country
             country_dict[country['iso-3']] = country
             country_dict[country['country']] = country
-            try:
-                country['aliases'] = [alias.strip() for alias in country['aliases'].split(';')]
-                for alias in country['aliases']:
-                    country_dict[alias] = country
-            except KeyError:
-                pass
+            for alias in country['aliases']:
+                country_dict[alias] = country
         return country_dict
     
     def to_file(filename):
@@ -120,11 +121,6 @@ class Locator(object):
                 if id in self.place_by_id:
                     logging.error("Duplicate Top 500 ID %d" % (id))
                 self.place_by_id[int(id)] = place
-            try:
-                place['long'] = float(place['long'])
-                place['lat'] = float(place['lat'])
-            except ValueError:
-                pass
         try:
             config = ConfigParser()
             config.read('config.ini')
@@ -381,10 +377,5 @@ class Locator(object):
                 self.locate(site)
                 if not site.get('long'):
                     unlocated_keys.append(key)
-            if key not in unlocated_keys:
-                if isinstance(site['long'], str):
-                    site['long'] = float(site['long'])
-                if isinstance(site['lat'], str):
-                    site['lat'] = float(site['lat'])
         for key in unlocated_keys:
             del sites[key]
