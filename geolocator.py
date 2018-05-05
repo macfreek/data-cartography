@@ -22,7 +22,7 @@ import difflib
 from typing import List, Dict, Any
 from configparser import ConfigParser
 
-from downloader import get_tsv
+from downloader import CachedDownloader, get_tsv
 
 UNLOCODE_URL = 'http://www.unece.org/fileadmin/DAM/cefact/locode/loc172csv.zip'
 UNLOCODE_PART1_PATH = 'geography/2017-2 UNLOCODE CodeListPart1.csv'
@@ -105,6 +105,10 @@ class placelist(dict):
         pass
 
 
+class UnkownLocation(Exception):
+    pass
+
+
 class Locator(object):
     def __init__(self, downloader):
         self.location_path = LOCATIONS_PATH
@@ -112,14 +116,21 @@ class Locator(object):
         self.countries = countrylist.from_file(COUNTRIES_PATH)
         self.eu_countries = [k for k,v in self.countries.items() if v['in_eu']]
         self.places = get_tsv(self.location_path)
-        self.place_by_id = {}
+        self.place_by_top500_id = {}
+        self.place_by_meril_id = {}
         self.downloader = downloader
         for place in self.places:
             place['top500_id'] = [int(id) for id in place['top500_id'].split(';') if id]
             for id in place['top500_id']:
-                if id in self.place_by_id:
+                if id in self.place_by_top500_id:
                     logging.error("Duplicate Top 500 ID %d" % (id))
-                self.place_by_id[int(id)] = place
+                self.place_by_top500_id[int(id)] = place
+        for place in self.places:
+            place['meril_id'] = [int(id) for id in place['meril_id'].split(';') if id]
+            for id in place['meril_id']:
+                if id in self.place_by_meril_id:
+                    logging.error("Duplicate MERIL ID %d" % (id))
+                self.place_by_meril_id[int(id)] = place
         try:
             config = ConfigParser()
             config.read('config.ini')
@@ -157,6 +168,40 @@ class Locator(object):
                 # logging.error("Can't determine country of place %s" % (place))
                 raise ValueError("Can't determine country of place %s" % (place))
         return country_filter
+    
+    def _get_known_place_by_top500_id(self, identifier):
+        """Search the local CSV file for the given town.
+        Return a dict with attributes: unlocode, countrycode, town, long, lat.
+        Return None if the town is not found."""
+        if identifier and identifier in self.place_by_top500_id:
+            place = self.place_by_top500_id[identifier]
+            if not place['long'] and not place['lat']:
+                if not place['town']:
+                    logging.debug("Known location without known geo location: " \
+                                "Top 500 id %d in %s" % (identifier, place['countrycode']))
+                else:
+                    logging.error("No geo location for %s %s" % \
+                                 (place['countrycode'], place['town']))
+                raise UnkownLocation()
+            return place
+        return None
+
+    def _get_known_place_by_meril_id(self, identifier):
+        """Search the local CSV file for the given town.
+        Return a dict with attributes: unlocode, countrycode, town, long, lat.
+        Return None if the town is not found."""
+        if identifier and identifier in self.place_by_meril_id:
+            place = self.place_by_meril_id[identifier]
+            if not place['long'] and not place['lat']:
+                if not place['town']:
+                    logging.debug("Known location without known geo location: " \
+                                "MERIL id %d in %s" % (identifier, place['countrycode']))
+                else:
+                    logging.error("No geo location for %s %s" % \
+                                 (place['countrycode'], place['town']))
+                raise UnkownLocation()
+            return place
+        return None
     
     def _get_known_place(self, countrycode, town):
         """Search the local CSV file for the given town.
@@ -263,19 +308,34 @@ class Locator(object):
     def _get_place(self, location):
         """Given a dict with 'country' and 'town' attribute, 
         find an associated place dict"""
+        top500_id = location.get('top500_id')
+        meril_id = location.get('meril_id')
+        countrycode = location.get('countrycode')
+        town = location.get('town')
+        
         # Try to find by identifier in known places
-        identifier = location.get('top500_id')
-        if identifier in self.place_by_id:
-            place = self.place_by_id[identifier]
-            if not place['long'] and not place['lat']:
-                logging.error("No geo location for %s %s" % \
-                             (place['countrycode'], place['town']))
+        place = self._get_known_place_by_top500_id(location.get('top500_id'))
+        if place:
+            if not place['source']:
+                place['source'] = 'local'
             return place
+
+        place = self._get_known_place_by_meril_id(location.get('meril_id'))
+        if place:
+            if not place['source']:
+                place['source'] = 'local'
+            return place
+        
+        if not town:
+            # There is nothing more to look for.
+            logging.error("Unknown place, unknown town: %s" % location)
+            raise UnkownLocation()
+        
         # Try to find by country/town in known places
-        town = location.get('town', '')  # MAY be defined
         place = self._get_known_place(location['countrycode'], town)
         if place:
-            place['source'] = 'local'
+            if not place['source']:
+                place['source'] = 'local'
             return place
         # Try to find by country/town in known places
         place = self._search_locode(location['countrycode'], town)
@@ -311,30 +371,46 @@ class Locator(object):
         First try UN/LOCODE databae (and set unlocode attribute), 
         otherwise use the Google Maps API."""
         # Set country and countrycode
-        try:
-            if 'country' not in location:
-                assert 'countrycode' in location
-                location['country'] = self.countries[location['countrycode']]['country']
-        except AssertionError:
-            logging.error("Location without country nor countrycode: %s" % (location))
-        except IndexError:
-            logging.error("Unknown country %s in location %s" % \
-                         (location['countrycode'], location))
-        try:
-            if 'countrycode' not in location:
+        if not location.get('country'):
+            if not location.get('countrycode'):
+                # TODO: should be logging.warning, but this is yet too common
+                logging.debug("Location without country nor countrycode: %s" % (location))
+                raise UnkownLocation()
+            try:
+                country = self.countries[location['countrycode']]
+            except KeyError:
+                logging.error("Unknown country %s in location %s" % \
+                             (location['countrycode'], location))
+                raise UnkownLocation()
+            location['country'] = country['country']
+        if not location.get('countrycode'):
+            try:
                 country = self.countries[location['country']]
-                location['countrycode'] = country['iso-2']
-        except IndexError:
-            logging.error("Unknown country %s in location %s" % \
-                          (location['country'], location))
+            except KeyError:
+                logging.error("Unknown country %s in location %s" % \
+                              (location['country'], location))
+                raise UnkownLocation()
+            location['countrycode'] = country['iso-2']
         # Find geo location
+        
+        # TODO: insert _place() method here.
+        
         place = self._get_place(location)
         if not place:
             logging.error("Can't find location for %s in %s (id %s)" % \
                         (location.get('town'), location['country'], 
                          location['top500_id'] if 'top500_id' in location else ''))
             logging.debug("Location = %r" % (location))
-            return
+            raise UnkownLocation()
+        
+        if not place.get('long'):
+            # TODO: if the place was found based on ID, this is a known issue.
+            # don't report is as error, but only as debug information
+            logging.error("Found place without geo-coordinates: %s" % (place))
+            raise UnkownLocation()
+        if isinstance(place['long'], str):
+            logging.error("Found place with geo-coordinates as string: %s" % (place))
+        
         self._augment(location, place)
         
         return
@@ -379,14 +455,29 @@ class Locator(object):
                     get_csv(UNLOCODE_PART3_PATH)))
         return locodes
 
-    def locate_and_filter_places(self, sites, filter_countries=None):
+    def locate_and_filter_places(self, locations, filter_countries=None):
         # TODO: filter countries if set.
         unlocated_keys = []
-        for key, site in sites.items():
-            assert isinstance(site, dict)
-            if 'long' not in site or 'lat' not in site or 'unlocode' not in site:
-                self.locate(site)
-                if not site.get('long'):
+        for key, location in locations.items():
+            assert isinstance(location, dict)
+            if not location.get('long') or not location.get('lat'):
+                try:
+                    self.locate(location)
+                except UnkownLocation as exc:
+                    # error was logged in locate() method.
                     unlocated_keys.append(key)
         for key in unlocated_keys:
-            del sites[key]
+            del locations[key]
+
+
+if __name__ == '__main__':
+    import sys
+    from pathlib import Path
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stderr, 
+                        format='%(levelname)-8s %(message)s')
+    esfri_list = get_tsv('sources/esfri.csv')
+    esfri_dict = {node['name']: node for node in esfri_list}
+    assert len(esfri_dict) == len(esfri_list)
+    downloader = CachedDownloader(Path('./'))
+    locator = Locator(downloader=downloader)
+    locator.locate_and_filter_places(esfri_dict)  # no filtering
