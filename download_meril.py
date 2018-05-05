@@ -7,6 +7,7 @@ import sys
 import logging
 from configparser import ConfigParser
 from pathlib import Path
+from typing import List, Dict  # noqa (only used for type hints)
 
 # local library
 from downloader import CachedDownloader
@@ -23,7 +24,8 @@ ALL_ORGANISATIONS_PATH = "organisations.html"
 
 INFRASTRUCTURE_RE_PATH = r".*/meril/view/facilitys/(\d+)"
 ORGANISATION_RE_PATH = r".*/meril/view/organisationUnits/(\d+)"
-RELATIONS_URL_PATH = BASE_MERIL_URL + "/meril/view/organisationUnits/%d/facilitys?page=1&pageSize=200"
+RELATIONS_URL_PATH = BASE_MERIL_URL + \
+        "/meril/view/organisationUnits/%d/facilitys?page=1&pageSize=200"
 
 
 class SearchResultParser(HTMLParser):
@@ -96,12 +98,8 @@ class InfrastructureParser(HTMLParser):
         if self.do_trace:
             # data = data.strip()
             data = re.sub('\s+', ' ', data).strip()
-            # if data and self.divtrace == ['main-block', 'viewPageContentId', 'viewPageContentAccordionId', '', 'riMainSegmentContent']:
             if not data:
                 return
-            # print(self.divtrace, repr(data))
-            # return
-            # print(self.divtrace)
             if 'createAndLastUpdateInfo' in self.divtrace:
                 return
             elif 'pictures2FrameId' in self.divtrace:
@@ -116,19 +114,20 @@ class InfrastructureParser(HTMLParser):
             elif self.divtrace == ['viewPageHeaderId', 'viewPageRIURLId', 'viewPageRIURLLinkId']:
                 self.result['url'] = data
                 return
-            elif self.divtrace == ['viewPageContentId', 'viewPageContentAccordionId', '', 'riHorizontalHeader', 'riHorizontalHeaderLabel']:
+            elif self.divtrace == ['viewPageContentId', 'viewPageContentAccordionId', '', \
+                                   'riHorizontalHeader', 'riHorizontalHeaderLabel']:
                 self.sectionname = data
                 self.section = {}
                 self.result[data] = self.section
                 return
-            elif self.divtrace == ['viewPageContentId', 'viewPageContentAccordionId', '', 'riMainSegmentContent']:
-                # if self.subsectionname is not None and self.subsectionname not in self.section:
-                #     print(self.identifier, "Found subsection without content: ", self.subsectionname)
-                #     print(self.result)
+            elif self.divtrace == ['viewPageContentId', 'viewPageContentAccordionId', '', \
+                                   'riMainSegmentContent']:
                 self.subsectionname = data
                 assert self.section is not None
                 return
-            elif self.divtrace[:6] == ['viewPageContentId', 'viewPageContentAccordionId', '', 'riMainSegmentContent', 'customAccordionPanel', 'viewPageContentDataV2']:
+            elif self.divtrace[:6] == ['viewPageContentId', 'viewPageContentAccordionId', '', \
+                                       'riMainSegmentContent', 'customAccordionPanel', \
+                                       'viewPageContentDataV2']:
                 assert self.section is not None
                 if self.subsectionname is None:
                     logging.error("Found subsection in %s without section name: %s" % \
@@ -144,7 +143,8 @@ class InfrastructureParser(HTMLParser):
                 if data == 'Information for this RI entry is currently being completed':
                     self.result['incomplete'] = True
                 else:
-                    print (data)
+                    logging.warning("Unknown viewPageContentId value for infrastructure %d: %s" % \
+                                (self.identifier, data))
                 return
             elif len(self.divtrace) < 6:
                 print("Unknown web page part: ", self.divtrace)
@@ -163,7 +163,9 @@ class InfrastructureParser(HTMLParser):
                     self.section[self.subsectionname] = [data]
                 return
             else:
-                print("Unknown web page part: ", self.divtrace, data)
+                logging.warning("Unknown web page part for infrastructure %d: <%s>%s</%s> at %s" \
+                          % (self.identifier, self.labelname, repr(data), self.labelname,
+                             self.divtrace))
 
 
 class OrganisationParser(HTMLParser):
@@ -214,7 +216,6 @@ class OrganisationParser(HTMLParser):
         if self.do_trace:
             # data = data.strip()
             data = re.sub('\s+', ' ', data).strip()
-            # if data and self.divtrace == ['main-block', 'viewPageContentId', 'viewPageContentAccordionId', '', 'riMainSegmentContent']:
             if not data:
                 return
             if self.is_label:
@@ -230,7 +231,8 @@ class OrganisationParser(HTMLParser):
                 self.result['name'] = data
             elif self.divtrace == [] and ('jQuery' in data or '$http.get(' in data):
                 return
-            elif self.divtrace[:4] == ['usual1', 'tab1', 'unPatraInfo', 'view_main_tab_subsection']:
+            elif self.divtrace[:4] == ['usual1', 'tab1', 'unPatraInfo', \
+                                       'view_main_tab_subsection']:
                 if self.labelname == 'URI':
                     self.result[self.labelname] = data
                 else:
@@ -242,7 +244,8 @@ class OrganisationParser(HTMLParser):
                 pass  # tab2 contains persons, we don't care
             elif self.divtrace[1] == 'tab3':
                 pass  # tab3 contains resource infrastructure, we receive that via seperate JSON
-            elif self.divtrace == ['usual1', 'tab1', '', 'firstTabSummarySections', 'summaryRelationName']:
+            elif self.divtrace == ['usual1', 'tab1', '', 'firstTabSummarySections', \
+                                   'summaryRelationName']:
                 if self.related_id and self.labelname.startswith('Related Organization'):
                     if 'relations' in self.result:
                         self.result['relations'][self.related_id] = data
@@ -251,8 +254,9 @@ class OrganisationParser(HTMLParser):
                     self.related_id = None
             else:
                 pass
-                # print(self.identifier, "Unknown web page part: ", self.divtrace, self.labelname, repr(data))
-
+                # logging.warning("Unknown web page part for organisation %d: <%s>%s</%s> at %s" \
+                #           % (self.identifier, self.labelname, repr(data), self.labelname,
+                #              self.divtrace))
 
 
 def parser_decorder_factory(parser):
@@ -272,11 +276,12 @@ def verify_infrastructure(identifier, infrastructure, downloader=None):
     if not infrastructure.get('incomplete', False):
         # Complete or nothing set
         try:
-            _ = infrastructure['Identification']['location']
-            _ = infrastructure['Structure']['typeOfRI']
-            _ = infrastructure['Scientific Description']['riKeywords']
-            _ = infrastructure['Classifications']['riCategory']
-            _ = infrastructure['Classifications']['scientificDomain']
+            # just access the variable to see if they exist.
+            infrastructure['Identification']['location']
+            infrastructure['Structure']['typeOfRI']
+            infrastructure['Scientific Description']['riKeywords']
+            infrastructure['Classifications']['riCategory']
+            infrastructure['Classifications']['scientificDomain']
             infrastructure['incomplete'] = False
         except KeyError as exc:
             logging.warning("Missing key in infrastructure %d: %s" % (identifier, exc))
@@ -296,26 +301,31 @@ def verify_organisation(identifier, organisation, downloader=None):
     
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(levelname)-8s %(message)s')
+    logging.basicConfig(
+                level=logging.INFO, 
+                stream=sys.stderr, 
+                format='%(levelname)-8s %(message)s'
+            )
     config = ConfigParser()
     config.read('config.ini')
     try:
         meril_folder = Path(config['MERIL']['cache_folder'])
         verify_ssl = config.getboolean('MERIL', 'verify_ssl', fallback=True)
     except KeyError:
-        logging.error("Please create a configuration file 'config.ini' with section '[MERIL]' and option 'cache_folder = ./path_to_a_folder'")
+        logging.error("Please create a configuration file 'config.ini' with section " \
+                      "'[MERIL]' and option 'cache_folder = ./path_to_a_folder'")
         sys.exit(1)
     downloader = CachedDownloader(meril_folder)
     
     # Download organisations
-    parser = SearchResultParser(BASE_MERIL_URL, ORGANISATION_RE_PATH)
+    parser1 = SearchResultParser(BASE_MERIL_URL, ORGANISATION_RE_PATH)
     result_links = downloader.get_cached_url(
                 ALL_ORGANISATIONS_URL, ALL_ORGANISATIONS_PATH,
                 verify_ssl=verify_ssl, ttl=3, decode_name='search results',
-                decode_func=parser_decorder_factory(parser),
+                decode_func=parser_decorder_factory(parser1),
                 )
     logging.info("Found %d organisation links" % (len(result_links)))
-    del parser
+    del parser1
 
     # Download individual organisations
     organisations = {}
@@ -335,12 +345,13 @@ if __name__ == '__main__':
         # There are new organisations. Parse them all.
         for identifier, url in result_links.items():
             html_cachefile = 'organisations_html/%d.html' % (identifier)
-            parser = OrganisationParser(identifier)
+            parser2 = OrganisationParser(identifier)
             organisation = downloader.get_cached_url(
                         url, html_cachefile, 
                         verify_ssl=verify_ssl, ttl=3, decode_name='organisation HTML',
-                        decode_func=parser_decorder_factory(parser),
+                        decode_func=parser_decorder_factory(parser2),
                         )
+            del parser2
             try:
                 verify_organisation(identifier, organisation, downloader=downloader)
                 organisations[identifier] = organisation
@@ -352,7 +363,7 @@ if __name__ == '__main__':
             json.dump(organisations, f, indent=1)
 
     # mapping from infrastructure to organisation (which we use later)
-    infrastructure_organisations = {}
+    infrastructure_organisations = {}  # type: Dict[int, List[int]]
     for identifier,organisation in organisations.items():
         for infrastructure in organisation["facilitys"]["entities"]:
             infrastructure_id = int(infrastructure["id"])
@@ -362,14 +373,14 @@ if __name__ == '__main__':
                 infrastructure_organisations[infrastructure_id] = [identifier]
     
     # Download infrastructures
-    parser = SearchResultParser(BASE_MERIL_URL, INFRASTRUCTURE_RE_PATH)
+    parser3 = SearchResultParser(BASE_MERIL_URL, INFRASTRUCTURE_RE_PATH)
     result_links = downloader.get_cached_url(
                 ALL_INFRASTRUCTURES_URL, ALL_INFRASTRUCTURES_PATH, 
                 verify_ssl=verify_ssl, ttl=3, decode_name='search results',
-                decode_func=parser_decorder_factory(parser),
+                decode_func=parser_decorder_factory(parser3),
                 )
     logging.info("Found %d infrastructure links" % (len(result_links)))
-    del parser
+    del parser3
 
     # Download individual infrastructures
     infrastructures = {}
@@ -389,12 +400,13 @@ if __name__ == '__main__':
         # There are new infrastructures. Parse them all.
         for identifier, url in result_links.items():
             html_cachefile = 'infrastructures_html/%d.html' % (identifier)
-            parser = InfrastructureParser(identifier)
+            parser4 = InfrastructureParser(identifier)
             infrastructure = downloader.get_cached_url(
                         url, html_cachefile, 
                         verify_ssl=verify_ssl, ttl=3, decode_name='infrastructure HTML',
-                        decode_func=parser_decorder_factory(parser),
-                        )
+                        decode_func=parser_decorder_factory(parser4),
+                    )
+            del parser4
             assert isinstance(infrastructure, dict)
             try:
                 verify_infrastructure(identifier, infrastructure, downloader=downloader)
@@ -410,8 +422,9 @@ if __name__ == '__main__':
             logging.debug("Write to %s" % (json_cachefile))
             json.dump(infrastructures, f, indent=1)
     
-    unlisted_infrastructures = set(infrastructure_organisations.keys()) - set(infrastructures.keys())
+    unlisted_infrastructures = set(infrastructure_organisations.keys()) \
+                               - set(infrastructures.keys())
     if unlisted_infrastructures:
-        logging.warning("Infrastructures of organisations, not listed as research infrastructure: %s" \
-                         % (', '.join([str(identifier) for identifier in unlisted_infrastructures])))
-
+        logging.warning("Infrastructures of organisations, not listed as research " \
+                "infrastructure: %s" % \
+                (', '.join([str(identifier) for identifier in unlisted_infrastructures])))

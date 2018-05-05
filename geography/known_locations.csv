@@ -1,4 +1,4 @@
-UNLOCODE	Countrycode	Town	Long	Lat	top500_id	Source
+UNLOCODE	Countrycode	Town	Long	Lat	top500_id	meril_id	Source
 AT 	AT				50672	
 AT VIE	AT	Vienna	16.3667	48.2000	50345	
 CH LUG	CH	Lugano	8.9512	46.0057	50422	

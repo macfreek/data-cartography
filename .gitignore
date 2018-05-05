@@ -1,2 +1,6 @@
 .mypy_cache
 config.ini
+MERIL/*.html
+MERIL/*.json
+MERIL/*/
+__pycache__
