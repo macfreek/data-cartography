@@ -133,10 +133,10 @@ class Locator(object):
             logging.error("Can't read Google map api key from config.ini: %s" % (exc))
             self.googlemap_apikey = None
     
-    def read_known_countries():
+    def read_known_countries(self):
         """Populate self.places with known places"""
         # TODO: to be written
-    def store_known_countries():
+    def store_known_countries(self):
         """If self.places was modified, write the modifications to file"""
         # TODO: to be written
     
@@ -329,7 +329,6 @@ class Locator(object):
             logging.debug("Location = %r" % (location))
             return
         self._augment(location, place)
-        
         
         return
         # TODO: rewrite:
