@@ -1,56 +1,56 @@
-# Countries in the EU
-ISO-2	ISO-3	Country	Aliases	Geographic	EU member status	Population
-AT	AUT	Austria		Europe	EU member	8823054
-BE	BEL	Belgium		Europe	EU member	11403187
-BG	BGR	Bulgaria		Europe	EU member	7101859
-HR	HRV	Croatia		Europe	EU member	4154213
-CY	CYP	Cyprus		Mostly European	EU member	854800
-CZ	CZE	Czech Republic	Czechia	Europe	EU member	10610055
-DK	DNK	Denmark		Europe	EU member	5781190
-EE	EST	Estonia		Europe	EU member	1352320
-FI	FIN	Finland		Europe	EU member	5516224
-FR	FRA	France		Europe	EU member	67196000
-DE	DEU	Germany		Europe	EU member	82576900
-GR	GRC	Greece		Europe	EU member	10768193
-HU	HUN	Hungary		Europe	EU member	9771000
-IE	IRL	Ireland		Europe	EU member	4792500
-IT	ITA	Italy		Europe	EU member	60500305
-LV	LVA	Latvia		Europe	EU member	1926600
-LT	LTU	Lithuania		Europe	EU member	2805418
-LU	LUX	Luxembourg		Europe	EU member	590667
-MT	MLT	Malta		Europe	EU member	434403
-NL	NLD	Netherlands	The Netherlands	Europe	EU member	17207100
-PL	POL	Poland		Europe	EU member	38422346
-PT	PRT	Portugal		Europe	EU member	10309573
-RO	ROU	Romania		Europe	EU member	19638000
-SK	SVK	Slovakia		Europe	EU member	5443120
-SI	SVN	Slovenia		Europe	EU member	2065895
-ES	ESP	Spain		Europe	EU member	46549045
-SE	SWE	Sweden		Europe	EU member	10128320
-GB	GBR	United Kingdom	Great Britain	Europe	EU member	65648100
-AL	ALB	Albania		Europe	H2020 Associated Country	2876591
-AM	ARM	Armenia		Western Asia	H2020 Associated Country	2979600
-BA	BIH	Bosnia and Herzegovina		Europe	H2020 Associated Country	3511372
-FO	FRO	Faroe Islands		European autonomous region	H2020 Associated Country	50322
-GE	GEO	Georgia		Western Asia	H2020 Associated Country	3718200
-IS	ISL	Iceland		Europe	H2020 Associated Country	348580
-IL	ISR	Israel		Western Asia	H2020 Associated Country	8833580
-MK	MKD	Macedonia (FYROM)		Europe	H2020 Associated Country	2073702
-MD	MDA	Moldova		Europe	H2020 Associated Country	3550900
-ME	MNE	Montenegro		Europe	H2020 Associated Country	622387
-NO	NOR	Norway		Europe	H2020 Associated Country	5295619
-RS	SRB	Serbia		Europe	H2020 Associated Country	7040272
-CH	CHE	Switzerland		Europe	H2020 Associated Country	8465234
-TN	TUN	Tunisia		Africa	H2020 Associated Country	11304482
-TR	TUR	Turkey		Partly European	H2020 Associated Country	80810525
-UA	UKR	Ukraine		Europe	H2020 Associated Country	42386403
-LI	LIE	Liechtenstein		European microstate	EU trade ass. Member	38111
-AD	AND	Andorra		European microstate	EU customs member	78264
-MC	MCO	Monaco		European microstate	EU customs member	37550
-SM	SMR	San Marino		European microstate	EU customs member	33196
-AZ	AZE	Azerbaijan		Western Asia	Council of Europe	9898085
-RU	RUS	Russia		Partly European	Council of Europe	146877088
-BY	BLR	Belarus		Europe	No	9491900
-KZ	KAZ	Kazakhstan		Western Asia	No	18177700
-XK	1A0	Kosovo		Europe - Limited recognition	No	1783531
-VA	VAR	Vatican City	Holy See	European microstate	No	800
+# Countries in the EU					
+ISO-2	ISO-3	Name	Aliases	EU member status	Population
+AT	AUT	Austria		EU member	8823054
+BE	BEL	Belgium		EU member	11403187
+BG	BGR	Bulgaria		EU member	7101859
+HR	HRV	Croatia		EU member	4154213
+CY	CYP	Cyprus		EU member	854800
+CZ	CZE	Czech Republic	Czechia	EU member	10610055
+DK	DNK	Denmark		EU member	5781190
+EE	EST	Estonia		EU member	1352320
+FI	FIN	Finland		EU member	5516224
+FR	FRA	France		EU member	67196000
+DE	DEU	Germany		EU member	82576900
+GR	GRC	Greece		EU member	10768193
+HU	HUN	Hungary		EU member	9771000
+IE	IRL	Ireland		EU member	4792500
+IT	ITA	Italy		EU member	60500305
+LV	LVA	Latvia		EU member	1926600
+LT	LTU	Lithuania		EU member	2805418
+LU	LUX	Luxembourg		EU member	590667
+MT	MLT	Malta		EU member	434403
+NL	NLD	Netherlands	The Netherlands	EU member	17207100
+PL	POL	Poland		EU member	38422346
+PT	PRT	Portugal		EU member	10309573
+RO	ROU	Romania		EU member	19638000
+SK	SVK	Slovakia		EU member	5443120
+SI	SVN	Slovenia		EU member	2065895
+ES	ESP	Spain		EU member	46549045
+SE	SWE	Sweden		EU member	10128320
+GB	GBR	United Kingdom	Great Britain	EU member	65648100
+AL	ALB	Albania		H2020 Associated Country	2876591
+AM	ARM	Armenia		H2020 Associated Country	2979600
+BA	BIH	Bosnia and Herzegovina		H2020 Associated Country	3511372
+FO	FRO	Faroe Islands		H2020 Associated Country	50322
+GE	GEO	Georgia		H2020 Associated Country	3718200
+IS	ISL	Iceland		H2020 Associated Country	348580
+IL	ISR	Israel		H2020 Associated Country	8833580
+MK	MKD	Macedonia (FYROM)		H2020 Associated Country	2073702
+MD	MDA	Moldova		H2020 Associated Country	3550900
+ME	MNE	Montenegro		H2020 Associated Country	622387
+NO	NOR	Norway		H2020 Associated Country	5295619
+RS	SRB	Serbia		H2020 Associated Country	7040272
+CH	CHE	Switzerland		H2020 Associated Country	8465234
+TN	TUN	Tunisia		H2020 Associated Country	11304482
+TR	TUR	Turkey		H2020 Associated Country	80810525
+UA	UKR	Ukraine		H2020 Associated Country	42386403
+LI	LIE	Liechtenstein		No	38111
+AD	AND	Andorra		No	78264
+MC	MCO	Monaco		No	37550
+SM	SMR	San Marino		No	33196
+AZ	AZE	Azerbaijan		No	9898085
+RU	RUS	Russia		No	146877088
+BY	BLR	Belarus		No	9491900
+KZ	KAZ	Kazakhstan		No	18177700
+XK	1A0	Kosovo		No	1783531
+VA	VAT	Vatican City	Holy See	No	800

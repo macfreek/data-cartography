@@ -71,8 +71,6 @@ def get_tsv(path: str,
                 row += [''] * (len(header) - len(row))
             elif len(row) < len(header):
                 logging.warning("Too many fields in record in %s: %s" % (path, row))
-            if filter_func and not filter_func(row):
-                continue
             
             # turn list of items into a dict, and convert values if header_types is set.
             dict_row = {}
@@ -83,8 +81,38 @@ def get_tsv(path: str,
                     if v != '':
                         raise 
                     dict_row[k] = None
+            
+            if filter_func and not filter_func(dict_row):
+                continue
             entries.append(dict_row)
         return entries
+
+def store_tsv(path: str, 
+            entities: List[Dict[str, Any]],
+            header, 
+            header_types = {},
+            sort_key = None,
+            encoding='utf-8', 
+            dialect='excel-tab', 
+        ) -> None:
+    """Return a Python object from tab delimited file.
+    The first line is assume to contain headers.
+    Returns an list of dicts.
+    """
+    logging.info("Writing %s" % (path))
+    base_folder = abspath(dirname(__file__))
+    path = join(base_folder, path)
+    keys = [re.sub(r'[^A-Za-z0-9\-_]+','_', head.lower()) for head in header]
+    header_types = defaultdict(lambda: str, header_types)
+    entity_list = list(entities)  # make a copy
+    if sort_key:
+        entity_list.sort(key=sort_key)
+    with open(path, 'w', encoding=encoding, newline='') as csvfile:
+        writer = csv.writer(csvfile, dialect=dialect, quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+        writer.writerow(header)
+        for entity in entity_list:
+            row = [header_types[key](entity[key]) for key in keys]
+            writer.writerow(row)
 
 
 def ensure_directory(path: Path, name="directory"):
